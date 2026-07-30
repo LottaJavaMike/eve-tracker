@@ -44,6 +44,7 @@ router.get('/', (req, res) => {
           name: char.name,
           corporationName: char.corporation_name,
           portraitUrl: char.portrait_url,
+          currentSystemName: char.current_system_name,
           connected: true,
         }
       : { connected: false },

@@ -89,6 +89,9 @@ export default function Dashboard() {
             <div>
               <div style={{ fontWeight: 600, fontSize: 13 }}>{data.character.name}</div>
               <div className="muted" style={{ fontSize: 11 }}>{data.character.corporationName}</div>
+              {data.character.currentSystemName && (
+                <div className="muted" style={{ fontSize: 11 }}>{data.character.currentSystemName}</div>
+              )}
             </div>
           </div>
         ) : (

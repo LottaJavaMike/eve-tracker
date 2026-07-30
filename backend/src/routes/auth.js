@@ -97,6 +97,7 @@ router.get('/status', (req, res) => {
     name: char.name,
     corporationName: char.corporation_name,
     portraitUrl: char.portrait_url,
+    currentSystemName: char.current_system_name,
     scopes: char.scopes?.split(' ') ?? [],
     connectedAt: char.connected_at,
   });

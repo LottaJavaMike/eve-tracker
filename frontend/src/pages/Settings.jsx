@@ -48,6 +48,9 @@ export default function Settings() {
                 <div>
                   <strong>{status.name}</strong>
                   <p className="secondary" style={{ margin: 0 }}>{status.corporationName}</p>
+                  {status.currentSystemName && (
+                    <p className="secondary" style={{ margin: 0 }}>{status.currentSystemName}</p>
+                  )}
                 </div>
               </div>
               <button className="btn btn-danger" onClick={disconnect}>Disconnect</button>

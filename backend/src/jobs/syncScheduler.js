@@ -172,6 +172,28 @@ async function syncWallet(characterId, token) {
   return balance;
 }
 
+const systemNameCache = new Map();
+async function resolveSystemName(systemId) {
+  if (systemNameCache.has(systemId)) return systemNameCache.get(systemId);
+  try {
+    const { data } = await esi.get(`/universe/systems/${systemId}/`);
+    systemNameCache.set(systemId, data.name);
+    return data.name;
+  } catch {
+    return null;
+  }
+}
+
+async function syncLocation(characterId, token) {
+  const { data: location } = await esi.get(`/characters/${characterId}/location/`, authHeader(token));
+  const systemName = await resolveSystemName(location.solar_system_id);
+  const now = new Date().toISOString();
+  db.prepare(
+    `UPDATE character SET current_system_id = ?, current_system_name = ?, location_synced_at = ? WHERE character_id = ?`
+  ).run(location.solar_system_id, systemName, now, characterId);
+  return systemName;
+}
+
 export async function runFullSync() {
   const char = getCharacterRow();
   if (!char) return { skipped: true, reason: 'no character connected' };
@@ -201,6 +223,12 @@ export async function runFullSync() {
   if (scopes.includes('read_character_wallet')) {
     results.wallet = await syncWallet(char.character_id, token).catch((e) => {
       console.error('Wallet sync failed:', e.message);
+      return null;
+    });
+  }
+  if (scopes.includes('read_location')) {
+    results.location = await syncLocation(char.character_id, token).catch((e) => {
+      console.error('Location sync failed:', e.message);
       return null;
     });
   }

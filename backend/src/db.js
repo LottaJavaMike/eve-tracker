@@ -99,3 +99,14 @@ CREATE TABLE IF NOT EXISTS wallet_snapshots (
   captured_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `);
+
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+ensureColumn('character', 'current_system_id', 'INTEGER');
+ensureColumn('character', 'current_system_name', 'TEXT');
+ensureColumn('character', 'location_synced_at', 'TEXT');
