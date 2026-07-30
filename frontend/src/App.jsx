@@ -5,6 +5,7 @@ import ProjectDetail from './pages/ProjectDetail.jsx';
 import Activities from './pages/Activities.jsx';
 import Industry from './pages/Industry.jsx';
 import Blueprints from './pages/Blueprints.jsx';
+import Assets from './pages/Assets.jsx';
 import PlanetaryInteraction from './pages/PlanetaryInteraction.jsx';
 import Settings from './pages/Settings.jsx';
 
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/activities', label: 'Activity Log' },
   { to: '/industry', label: 'Industry' },
   { to: '/blueprints', label: 'Blueprints' },
+  { to: '/assets', label: 'Assets' },
   { to: '/planets', label: 'Planetary Interaction' },
   { to: '/settings', label: 'Settings' },
 ];
@@ -43,6 +45,7 @@ function App() {
             <Route path="/activities" element={<Activities />} />
             <Route path="/industry" element={<Industry />} />
             <Route path="/blueprints" element={<Blueprints />} />
+            <Route path="/assets" element={<Assets />} />
             <Route path="/planets" element={<PlanetaryInteraction />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

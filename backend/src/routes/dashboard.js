@@ -30,6 +30,8 @@ router.get('/', (req, res) => {
   const blueprintCount = db.prepare('SELECT COUNT(*) AS count FROM blueprints').get().count;
   const bpoCount = db.prepare('SELECT COUNT(*) AS count FROM blueprints WHERE is_bpo = 1').get().count;
 
+  const assetsTotalValue = db.prepare('SELECT COALESCE(SUM(total_value), 0) AS total FROM assets').get().total;
+
   const piColonies = db.prepare('SELECT * FROM pi_colonies ORDER BY expiry_date ASC').all();
 
   const walletHistory = db
@@ -54,6 +56,7 @@ router.get('/', (req, res) => {
     industryJobsInProgress,
     blueprintCount,
     bpoCount,
+    assetsTotalValue,
     piColonies,
     walletBalance,
     walletHistory,

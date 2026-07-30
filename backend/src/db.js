@@ -98,6 +98,20 @@ CREATE TABLE IF NOT EXISTS wallet_snapshots (
   balance REAL,
   captured_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS assets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  esi_item_id INTEGER UNIQUE,
+  type_id INTEGER,
+  type_name TEXT,
+  quantity INTEGER,
+  location_id INTEGER,
+  location_name TEXT,
+  location_flag TEXT,
+  unit_price REAL,
+  total_value REAL,
+  synced_at TEXT
+);
 `);
 
 function ensureColumn(table, column, definition) {

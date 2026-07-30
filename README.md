@@ -10,8 +10,9 @@ Everything runs on your machine — nothing is hosted or synced elsewhere.
 - Freeform **projects** and **activity log** — track anything you're working
   on in-game, with status, priority, and a timestamped log of what you did.
 - **EVE SSO login** to pull live character data from ESI: industry jobs
-  (manufacturing/research/reactions), blueprint library, planetary interaction
-  colonies (with extraction timers), and wallet balance.
+  (manufacturing/research/reactions), blueprint library, asset inventory
+  (with location and market value), planetary interaction colonies (with
+  extraction timers), and wallet balance.
 - Link industry jobs to projects, or log manual jobs by hand if you'd rather
   not connect a character at all.
 - A **dashboard** with stat tiles, a project-status breakdown, an industry
@@ -41,7 +42,7 @@ activities — no EVE login required for that part.
 
 ## Connecting your character (optional, for ESI data)
 
-Industry jobs, blueprints, PI, and wallet sync require registering your own
+Industry jobs, blueprints, assets, PI, and wallet sync require registering your own
 application with CCP and logging in via EVE SSO:
 
 1. Go to https://developers.eveonline.com/applications and create a new
@@ -49,8 +50,9 @@ application with CCP and logging in via EVE SSO:
    - **Connection Type**: Authentication & API Access
    - **Callback URL**: `http://localhost:3001/auth/callback` (must match exactly)
    - **Scopes**: `esi-industry.read_character_jobs.v1`,
-     `esi-characters.read_blueprints.v1`, `esi-planets.manage_planets.v1`,
-     `esi-wallet.read_character_wallet.v1`, `esi-location.read_location.v1`
+     `esi-characters.read_blueprints.v1`, `esi-assets.read_assets.v1`,
+     `esi-planets.manage_planets.v1`, `esi-wallet.read_character_wallet.v1`,
+     `esi-location.read_location.v1`
 2. Copy the generated **Client ID** and **Secret Key** into `backend/.env`:
    ```
    ESI_CLIENT_ID=your_client_id

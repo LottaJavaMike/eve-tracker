@@ -194,6 +194,156 @@ async function syncLocation(characterId, token) {
   return systemName;
 }
 
+const stationNameCache = new Map();
+async function resolveStationName(stationId) {
+  if (stationNameCache.has(stationId)) return stationNameCache.get(stationId);
+  try {
+    const { data } = await esi.get(`/universe/stations/${stationId}/`);
+    stationNameCache.set(stationId, data.name);
+    return data.name;
+  } catch {
+    return null;
+  }
+}
+
+const structureNameCache = new Map();
+async function resolveStructureName(structureId, token) {
+  if (structureNameCache.has(structureId)) return structureNameCache.get(structureId);
+  try {
+    const { data } = await esi.get(`/universe/structures/${structureId}/`, authHeader(token));
+    structureNameCache.set(structureId, data.name);
+    return data.name;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchAllAssetPages(characterId, token) {
+  const items = [];
+  let page = 1;
+  let totalPages = 1;
+  do {
+    const res = await esi.get(`/characters/${characterId}/assets/?page=${page}`, authHeader(token));
+    items.push(...res.data);
+    totalPages = Number(res.headers['x-pages']) || 1;
+    page += 1;
+  } while (page <= totalPages);
+  return items;
+}
+
+async function fetchMarketPrices() {
+  const priceByType = new Map();
+  try {
+    const { data } = await esi.get('/markets/prices/');
+    for (const p of data) {
+      priceByType.set(p.type_id, p.average_price || p.adjusted_price || 0);
+    }
+  } catch (e) {
+    console.error('Market price fetch failed, valuations will be 0:', e.message);
+  }
+  return priceByType;
+}
+
+function buildResolveRoot(itemsById, token) {
+  const rootCache = new Map();
+  const MAX_DEPTH = 10;
+
+  async function resolveRoot(itemId, depth = 0) {
+    if (rootCache.has(itemId)) return rootCache.get(itemId);
+
+    if (depth > MAX_DEPTH) {
+      const fallback = { name: `Location ${itemId} (nesting too deep)` };
+      rootCache.set(itemId, fallback);
+      return fallback;
+    }
+
+    const asset = itemsById.get(itemId);
+    if (!asset) {
+      const fallback = { name: `Unknown location ${itemId}` };
+      rootCache.set(itemId, fallback);
+      return fallback;
+    }
+
+    let result;
+    switch (asset.location_type) {
+      case 'station':
+        result = { name: (await resolveStationName(asset.location_id)) || `Station ${asset.location_id}` };
+        break;
+      case 'solar_system':
+        result = { name: (await resolveSystemName(asset.location_id)) || `System ${asset.location_id}` };
+        break;
+      case 'other':
+        result = { name: (await resolveStructureName(asset.location_id, token)) || `Structure ${asset.location_id}` };
+        break;
+      case 'item':
+        result = await resolveRoot(asset.location_id, depth + 1);
+        break;
+      default:
+        result = { name: `Location ${asset.location_id}` };
+    }
+
+    rootCache.set(itemId, result);
+    return result;
+  }
+
+  return resolveRoot;
+}
+
+async function syncAssets(characterId, token) {
+  const items = await fetchAllAssetPages(characterId, token);
+  const priceByType = await fetchMarketPrices();
+  const itemsById = new Map(items.map((i) => [i.item_id, i]));
+  const resolveRoot = buildResolveRoot(itemsById, token);
+
+  const now = new Date().toISOString();
+  const upsert = db.prepare(`
+    INSERT INTO assets
+      (esi_item_id, type_id, type_name, quantity, location_id, location_name, location_flag,
+       unit_price, total_value, synced_at)
+    VALUES (@esi_item_id, @type_id, @type_name, @quantity, @location_id, @location_name, @location_flag,
+            @unit_price, @total_value, @synced_at)
+    ON CONFLICT(esi_item_id) DO UPDATE SET
+      type_name = excluded.type_name,
+      quantity = excluded.quantity,
+      location_id = excluded.location_id,
+      location_name = excluded.location_name,
+      location_flag = excluded.location_flag,
+      unit_price = excluded.unit_price,
+      total_value = excluded.total_value,
+      synced_at = excluded.synced_at
+  `);
+
+  const seenIds = new Set();
+  for (const item of items) {
+    const [typeName, root] = await Promise.all([
+      resolveTypeName(item.type_id),
+      resolveRoot(item.item_id),
+    ]);
+    const unitPrice = priceByType.get(item.type_id) || 0;
+    upsert.run({
+      esi_item_id: item.item_id,
+      type_id: item.type_id,
+      type_name: typeName,
+      quantity: item.quantity,
+      location_id: item.location_id,
+      location_name: root.name,
+      location_flag: item.location_flag,
+      unit_price: unitPrice,
+      total_value: unitPrice * item.quantity,
+      synced_at: now,
+    });
+    seenIds.add(item.item_id);
+  }
+
+  const existingIds = db.prepare('SELECT esi_item_id FROM assets').all();
+  const del = db.prepare('DELETE FROM assets WHERE esi_item_id = ?');
+  for (const row of existingIds) {
+    if (!seenIds.has(row.esi_item_id)) del.run(row.esi_item_id);
+  }
+
+  return items.length;
+}
+
 export async function runFullSync() {
   const char = getCharacterRow();
   if (!char) return { skipped: true, reason: 'no character connected' };
@@ -229,6 +379,12 @@ export async function runFullSync() {
   if (scopes.includes('read_location')) {
     results.location = await syncLocation(char.character_id, token).catch((e) => {
       console.error('Location sync failed:', e.message);
+      return null;
+    });
+  }
+  if (scopes.includes('read_assets')) {
+    results.assets = await syncAssets(char.character_id, token).catch((e) => {
+      console.error('Asset sync failed:', e.message);
       return null;
     });
   }

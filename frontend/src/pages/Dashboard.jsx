@@ -106,6 +106,7 @@ export default function Dashboard() {
         <StatTile label="Jobs in progress" value={data.industryJobsInProgress.length} />
         <StatTile label="Blueprints owned" value={data.blueprintCount} />
         <StatTile label="BPOs" value={data.bpoCount} />
+        <StatTile label="Assets value" value={formatIsk(data.assetsTotalValue)} />
         <StatTile label="PI extractions <48h" value={upcomingExtractions} />
         <StatTile label="Wallet balance" value={data.walletBalance !== null ? formatIsk(data.walletBalance) : '—'} />
       </div>

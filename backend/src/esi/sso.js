@@ -5,6 +5,7 @@ const SSO_BASE = 'https://login.eveonline.com';
 export const SCOPES = [
   'esi-industry.read_character_jobs.v1',
   'esi-characters.read_blueprints.v1',
+  'esi-assets.read_assets.v1',
   'esi-planets.manage_planets.v1',
   'esi-wallet.read_character_wallet.v1',
   'esi-location.read_location.v1',
