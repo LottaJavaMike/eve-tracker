@@ -12,12 +12,13 @@ Everything runs on your machine — nothing is hosted or synced elsewhere.
 - **EVE SSO login** to pull live character data from ESI: industry jobs
   (manufacturing/research/reactions), blueprint library, asset inventory
   (with location and market value), planetary interaction colonies (with
-  extraction timers), and wallet balance.
+  extraction timers), skill queue (with per-skill and total time remaining),
+  and wallet balance.
 - Link industry jobs to projects, or log manual jobs by hand if you'd rather
   not connect a character at all.
 - A **dashboard** with stat tiles, a project-status breakdown, an industry
-  jobs table with time-remaining indicators, PI extraction countdowns, and a
-  wallet balance trend.
+  jobs table with time-remaining indicators, PI extraction countdowns, a
+  skill queue summary, and a wallet balance trend.
 
 ## Requirements
 
@@ -42,8 +43,8 @@ activities — no EVE login required for that part.
 
 ## Connecting your character (optional, for ESI data)
 
-Industry jobs, blueprints, assets, PI, and wallet sync require registering your own
-application with CCP and logging in via EVE SSO:
+Industry jobs, blueprints, assets, PI, skill queue, and wallet sync require
+registering your own application with CCP and logging in via EVE SSO:
 
 1. Go to https://developers.eveonline.com/applications and create a new
    application.
@@ -52,7 +53,7 @@ application with CCP and logging in via EVE SSO:
    - **Scopes**: `esi-industry.read_character_jobs.v1`,
      `esi-characters.read_blueprints.v1`, `esi-assets.read_assets.v1`,
      `esi-planets.manage_planets.v1`, `esi-wallet.read_character_wallet.v1`,
-     `esi-location.read_location.v1`
+     `esi-location.read_location.v1`, `esi-skills.read_skillqueue.v1`
 2. Copy the generated **Client ID** and **Secret Key** into `backend/.env`:
    ```
    ESI_CLIENT_ID=your_client_id
@@ -82,3 +83,6 @@ data/       SQLite database file (gitignored)
   `/universe/` endpoints and caches them in memory per process.
 - Deleting a project sets `project_id` to null on any linked activities/jobs
   rather than deleting them.
+- If you connected a character before a new ESI scope was added (e.g. skill
+  queue), reconnect via **Settings** so the new scope is included — synced
+  data for that scope stays empty until then.
