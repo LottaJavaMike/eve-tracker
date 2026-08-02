@@ -112,6 +112,20 @@ CREATE TABLE IF NOT EXISTS assets (
   total_value REAL,
   synced_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS skill_queue (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  skill_id INTEGER,
+  skill_name TEXT,
+  queue_position INTEGER,
+  finished_level INTEGER,
+  level_start_sp INTEGER,
+  level_end_sp INTEGER,
+  training_start_sp INTEGER,
+  start_date TEXT,
+  finish_date TEXT,
+  synced_at TEXT
+);
 `);
 
 function ensureColumn(table, column, definition) {

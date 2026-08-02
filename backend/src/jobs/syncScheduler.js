@@ -166,6 +166,34 @@ async function syncPlanets(characterId, token) {
   return planets.length;
 }
 
+async function syncSkillQueue(characterId, token) {
+  const { data: queue } = await esi.get(`/characters/${characterId}/skillqueue/`, authHeader(token));
+  const now = new Date().toISOString();
+  const insert = db.prepare(`
+    INSERT INTO skill_queue
+      (skill_id, skill_name, queue_position, finished_level, level_start_sp, level_end_sp, training_start_sp, start_date, finish_date, synced_at)
+    VALUES (@skill_id, @skill_name, @queue_position, @finished_level, @level_start_sp, @level_end_sp, @training_start_sp, @start_date, @finish_date, @synced_at)
+  `);
+
+  db.exec('DELETE FROM skill_queue');
+  for (const entry of queue) {
+    const skillName = await resolveTypeName(entry.skill_id);
+    insert.run({
+      skill_id: entry.skill_id,
+      skill_name: skillName,
+      queue_position: entry.queue_position,
+      finished_level: entry.finished_level,
+      level_start_sp: entry.level_start_sp ?? null,
+      level_end_sp: entry.level_end_sp ?? null,
+      training_start_sp: entry.training_start_sp ?? null,
+      start_date: entry.start_date ?? null,
+      finish_date: entry.finish_date ?? null,
+      synced_at: now,
+    });
+  }
+  return queue.length;
+}
+
 async function syncWallet(characterId, token) {
   const { data: balance } = await esi.get(`/characters/${characterId}/wallet/`, authHeader(token));
   db.prepare('INSERT INTO wallet_snapshots (balance) VALUES (?)').run(balance);
@@ -385,6 +413,12 @@ export async function runFullSync() {
   if (scopes.includes('read_assets')) {
     results.assets = await syncAssets(char.character_id, token).catch((e) => {
       console.error('Asset sync failed:', e.message);
+      return null;
+    });
+  }
+  if (scopes.includes('read_skillqueue')) {
+    results.skillQueue = await syncSkillQueue(char.character_id, token).catch((e) => {
+      console.error('Skill queue sync failed:', e.message);
       return null;
     });
   }
