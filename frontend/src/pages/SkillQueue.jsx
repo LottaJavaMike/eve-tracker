@@ -11,9 +11,19 @@ export default function SkillQueue() {
     api.get('/api/skills').then(setQueue).finally(() => setLoading(false));
   }, []);
 
+  const lastFinish = queue.length ? queue[queue.length - 1].finish_date : null;
+  const totalRemaining = lastFinish ? timeRemaining(lastFinish) : null;
+
   return (
     <div>
-      <h2>Skill Queue</h2>
+      <div className="row">
+        <h2>Skill Queue</h2>
+        {!loading && totalRemaining && (
+          <span className="secondary">
+            Total queue time remaining: <StatusPill label={totalRemaining.label} tone={totalRemaining.tone} />
+          </span>
+        )}
+      </div>
       <div className="card">
         {loading ? (
           <p className="empty-state">Loading…</p>

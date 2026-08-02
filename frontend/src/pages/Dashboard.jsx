@@ -74,6 +74,8 @@ export default function Dashboard() {
     return hours < 48;
   }).length;
 
+  const skillQueueRemaining = data.skillQueueFinish ? timeRemaining(data.skillQueueFinish) : null;
+
   const walletData = data.walletHistory.map((w) => ({
     time: new Date(w.captured_at.replace(' ', 'T') + 'Z').getTime(),
     balance: w.balance,
@@ -195,6 +197,22 @@ export default function Dashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             )}
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>Skill queue</h3>
+            <div className="list-item row">
+              <span>Skills in queue</span>
+              <span style={{ fontWeight: 600 }}>{data.skillQueueCount}</span>
+            </div>
+            <div className="list-item row">
+              <span>Time remaining</span>
+              {skillQueueRemaining ? (
+                <StatusPill label={skillQueueRemaining.label} tone={skillQueueRemaining.tone} />
+              ) : (
+                <span className="muted">—</span>
+              )}
+            </div>
           </div>
 
           <div className="card">

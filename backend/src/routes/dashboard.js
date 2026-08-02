@@ -34,6 +34,11 @@ router.get('/', (req, res) => {
 
   const piColonies = db.prepare('SELECT * FROM pi_colonies ORDER BY expiry_date ASC').all();
 
+  const skillQueueCount = db.prepare('SELECT COUNT(*) AS count FROM skill_queue').get().count;
+  const skillQueueFinish = db
+    .prepare('SELECT finish_date FROM skill_queue ORDER BY queue_position DESC LIMIT 1')
+    .get()?.finish_date ?? null;
+
   const walletHistory = db
     .prepare('SELECT balance, captured_at FROM wallet_snapshots ORDER BY captured_at ASC LIMIT 200')
     .all();
@@ -60,6 +65,8 @@ router.get('/', (req, res) => {
     piColonies,
     walletBalance,
     walletHistory,
+    skillQueueCount,
+    skillQueueFinish,
   });
 });
 
