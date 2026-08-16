@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { formatDateTime } from '../utils/format.js';
+import IndustryCostModal from '../components/IndustryCostModal.jsx';
 
 export default function Blueprints() {
   const [blueprints, setBlueprints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [costTarget, setCostTarget] = useState(null);
 
   useEffect(() => {
     api.get('/api/blueprints').then(setBlueprints).finally(() => setLoading(false));
@@ -31,6 +33,7 @@ export default function Blueprints() {
                 <th>Qty</th>
                 <th>Location</th>
                 <th>Synced</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -43,12 +46,24 @@ export default function Blueprints() {
                   <td className="secondary">{bp.quantity > 0 ? bp.quantity : 1}</td>
                   <td className="secondary">{bp.location_name}</td>
                   <td className="secondary">{formatDateTime(bp.synced_at)}</td>
+                  <td>
+                    <button className="link-button" onClick={() => setCostTarget(bp)}>Calculate</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+      {costTarget && (
+        <IndustryCostModal
+          blueprintTypeId={costTarget.type_id}
+          blueprintName={costTarget.type_name || `Type ${costTarget.type_id}`}
+          defaultRuns={1}
+          defaultMe={costTarget.material_efficiency}
+          onClose={() => setCostTarget(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { formatDateTime, formatIsk, timeRemaining } from '../utils/format.js';
 import StatusPill from '../components/StatusPill.jsx';
+import IndustryCostModal from '../components/IndustryCostModal.jsx';
 
 const EMPTY_FORM = {
   activity_type: 'manufacturing', blueprint_name: '', output_name: '', runs: 1,
@@ -15,6 +16,7 @@ export default function Industry() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [costTarget, setCostTarget] = useState(null);
 
   function load() {
     setLoading(true);
@@ -147,6 +149,7 @@ export default function Industry() {
                 <th>Cost</th>
                 <th>Project</th>
                 <th>Source</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -172,6 +175,11 @@ export default function Industry() {
                       </select>
                     </td>
                     <td className="secondary">{j.source}</td>
+                    <td>
+                      {j.blueprint_type_id && (
+                        <button className="link-button" onClick={() => setCostTarget(j)}>Calculate</button>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -179,6 +187,14 @@ export default function Industry() {
           </table>
         )}
       </div>
+      {costTarget && (
+        <IndustryCostModal
+          blueprintTypeId={costTarget.blueprint_type_id}
+          blueprintName={costTarget.blueprint_name}
+          defaultRuns={costTarget.runs}
+          onClose={() => setCostTarget(null)}
+        />
+      )}
     </div>
   );
 }
