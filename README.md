@@ -11,9 +11,13 @@ Everything runs on your machine — nothing is hosted or synced elsewhere.
   on in-game, with status, priority, and a timestamped log of what you did.
 - **EVE SSO login** to pull live character data from ESI: industry jobs
   (manufacturing/research/reactions), blueprint library, asset inventory
-  (with location and market value), planetary interaction colonies (with
-  extraction timers), skill queue (with per-skill and total time remaining),
-  and wallet balance.
+  (with location and market value, and a click-through item description),
+  planetary interaction colonies (with extraction timers), skill queue
+  (with per-skill and total time remaining), and wallet balance.
+- A **cost & profit calculator** for blueprints and industry jobs — build
+  cost, expected revenue, and margin, factoring in ME-adjusted material
+  requirements, a selectable trade hub's live prices, and the local system
+  cost index.
 - Link industry jobs to projects, or log manual jobs by hand if you'd rather
   not connect a character at all.
 - A **dashboard** with stat tiles, a project-status breakdown, an industry
@@ -86,3 +90,10 @@ data/       SQLite database file (gitignored)
 - If you connected a character before a new ESI scope was added (e.g. skill
   queue), reconnect via **Settings** so the new scope is included — synced
   data for that scope stays empty until then.
+- The cost & profit calculator is the one feature that isn't purely ESI: it
+  also calls two free, unauthenticated community APIs, since ESI has no
+  endpoint for blueprint material requirements — [EVE Ref's Industry Cost
+  API](https://api.everef.net/) for ME-adjusted material lists, and
+  [Fuzzwork's market aggregates](https://market.fuzzwork.co.uk/) for
+  hub-selectable prices. Nothing from these is stored; each calculation is
+  computed live on click.
