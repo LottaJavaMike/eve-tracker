@@ -1,14 +1,28 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { formatDateTime, formatIsk } from '../utils/format.js';
+import Modal from '../components/Modal.jsx';
 
 export default function Assets() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedType, setSelectedType] = useState(null);
+  const [description, setDescription] = useState(null);
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
 
   useEffect(() => {
     api.get('/api/assets').then(setAssets).finally(() => setLoading(false));
   }, []);
+
+  function openDescription(asset) {
+    setSelectedType(asset);
+    setDescription(null);
+    setDescriptionLoading(true);
+    api
+      .get(`/api/assets/types/${asset.type_id}/description`)
+      .then(setDescription)
+      .finally(() => setDescriptionLoading(false));
+  }
 
   const totalValue = assets.reduce((sum, a) => sum + (a.total_value || 0), 0);
 
@@ -43,7 +57,11 @@ export default function Assets() {
             <tbody>
               {assets.map((a) => (
                 <tr key={a.id}>
-                  <td>{a.type_name || `Type ${a.type_id}`}</td>
+                  <td>
+                    <button className="link-button" onClick={() => openDescription(a)}>
+                      {a.type_name || `Type ${a.type_id}`}
+                    </button>
+                  </td>
                   <td className="secondary">{a.quantity}</td>
                   <td className="secondary">{a.location_name || `Location ${a.location_id}`}</td>
                   <td className="secondary">{a.location_flag}</td>
@@ -56,6 +74,17 @@ export default function Assets() {
           </table>
         )}
       </div>
+      {selectedType && (
+        <Modal title={selectedType.type_name || `Type ${selectedType.type_id}`} onClose={() => setSelectedType(null)}>
+          {descriptionLoading ? (
+            <p className="empty-state">Loading…</p>
+          ) : description?.description ? (
+            <p className="item-description">{description.description}</p>
+          ) : (
+            <p className="empty-state">No description available for this item.</p>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }
